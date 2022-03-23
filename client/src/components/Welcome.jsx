@@ -3,6 +3,7 @@ import { SiEthereum } from "react-icons/si";
 import { BsInfoCircle } from "react-icons/bs";
 import Loader from "./Loader";
 import { TransactionContext } from "../context/TransactionsContext";
+import { shortenAddress } from "../utils/shortenAddress";
 const Input = ({ placeholder, type, value, handleChange, name }) => (
   <input
     placeholder={placeholder}
@@ -17,9 +18,20 @@ const Input = ({ placeholder, type, value, handleChange, name }) => (
 const commonStyles =
   "min-h-[70px] sm:px-0 px-2 sm:min-w-[120px] flex justify-center items-center border-[0.5px] border-gray-400 text-sm font-light text-white";
 const Welcome = () => {
-  const { connectWallet, connectedAccount } = useContext(TransactionContext);
-  const handleChange = () => {};
-  const handleSubmit = () => {};
+  const {
+    connectWallet,
+    connectedAccount,
+    formData,
+    setfromData,
+    handleChange,
+    sendTransaction,
+  } = useContext(TransactionContext);
+  const handleSubmit = (e) => {
+    const { addressTo, amount, keyword, message } = formData;
+    e.preventDefault();
+    if (!addressTo || !amount || !keyword || !message) return;
+    sendTransaction();
+  };
   return (
     <div className="flex w-full justify-center items-center">
       <div
@@ -63,7 +75,9 @@ const Welcome = () => {
                 <BsInfoCircle fontSize={17} color="#fff" />
               </div>
               <div>
-                <p className="text-white font-light text-sm">Address</p>
+                <p className="text-white font-light text-sm">
+                  {shortenAddress(connectedAccount)}
+                </p>
                 <p className="text-white font-semibold text-lg mt-1">
                   Ethereum
                 </p>

@@ -15,15 +15,24 @@ const getEthereumContract = () => {
     contractABI,
     signer
   );
-  console.log({
-    provider,
-    signer,
-    transactionContract,
-  });
+  return transactionContract;
 };
 
 export const TransactionProvider = ({ children }) => {
+  const [formData, setformData] = useState({
+    addressTo: "",
+    amount: "",
+    keyword: "",
+    message: "",
+  });
+  const handleChange = (e, name) => {
+    setformData((prevState) => ({ ...prevState, [name]: e.target.value }));
+  };
   const [connectedAccount, setconnectedAccount] = useState("");
+  const [Loading, setLoading] = useState(false);
+  const [transactionCount, settransactionCount] = useState(
+    localStorage.getItem("transactionCount")
+  );
   const checkIfWalletIsConnected = async () => {
     try {
       if (!ethereum) return alert("Please install metamask");
@@ -52,12 +61,57 @@ export const TransactionProvider = ({ children }) => {
       throw new Error("No Ethereum Object");
     }
   };
+  const sendTransaction = async () => {
+    try {
+      if (!ethereum) return alert("Please install metamask");
+      // Get data from the form
+      const { addressTo, amount, keyword, message } = formData;
+      const parsedAmount = ethers.utils.parseEther(amount);
+      const transactionContract = getEthereumContract();
+      await ethereum.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: connectedAccount,
+            to: addressTo,
+            gas: "0x5208", // 21000 GEWI
+            value: parsedAmount._hex, // 0.00001
+          },
+        ],
+      });
+      const transactionHash = await transactionContract.addToBlockchain(
+        addressTo,
+        parsedAmount,
+        message,
+        keyword
+      );
+      setLoading(true);
+      console.log(`Loading - ${transactionHash.hash}`);
+      await transactionHash.wait();
+      setLoading(false);
+      console.log(`Success - ${transactionHash.hash}`);
+      const transactionCount = await transactionContract.getTransactionCount();
+      settransactionCount(transactionCount.toNumber());
+    } catch (error) {
+      console.log(error);
+      throw new Error("No Ethereum Object");
+    }
+  };
   useEffect(() => {
     checkIfWalletIsConnected();
   }, []);
 
   return (
-    <TransactionContext.Provider value={{ connectWallet, connectedAccount }}>
+    <TransactionContext.Provider
+      value={{
+        connectWallet,
+        connectedAccount,
+        formData,
+        setformData,
+        handleChange,
+        sendTransaction,
+      }}
+    >
       {children}
     </TransactionContext.Provider>
   );
