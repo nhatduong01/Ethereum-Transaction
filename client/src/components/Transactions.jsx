@@ -2,9 +2,10 @@ import React, { useContext } from "react";
 import { TransactionContext } from "../context/TransactionsContext";
 import dummyData from "../utils/dummyData";
 import { shortenAddress } from "../utils/shortenAddress";
+import { useFetch } from "../hooks/useFetch";
 import TransactionCard from "./TransactionCard";
 const Transactions = () => {
-  const { connectedAccount } = useContext(TransactionContext);
+  const { connectedAccount, transactions } = useContext(TransactionContext);
 
   return (
     <div className="flex w-full justify-center items-center 2xl:px-20 gradient-bg-transactions">
@@ -20,7 +21,7 @@ const Transactions = () => {
         )}
         <div className="flex flex-wrap justify-center items-center mt-10">
           {/* i here is a special character you cannot change i by index */}
-          {dummyData.reverse().map((transaction, i) => (
+          {transactions.reverse().map((transaction, i) => (
             <TransactionCard key={i} {...transaction} />
           ))}
         </div>
